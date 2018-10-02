@@ -251,6 +251,28 @@ def checkZscaler(domain):
         return "-"
 
 
+def checkFortiguard(domain):
+    try: 
+        url = 'https://fortiguard.com/webfilter?q={}&version=8'.format(domain)
+        headers = {'User-Agent':useragent,
+                    'Origin':url,
+                    'Referer':url}
+
+        print('[*] Fortiguard: {}'.format(domain))
+
+        response = s.get(url,headers=headers,verify=False)
+
+        soup = BeautifulSoup(response.content,'lxml')
+
+        category = soup.find('meta', {'name': 'description'})
+
+        return category['content'].replace("Category: ", '')
+
+    except:
+        print('[-] Error retrieving Fortiguard reputation!')
+        return "-"
+
+
 def downloadMalwareDomains(malwaredomainsURL):
     url = malwaredomainsURL
     response = s.get(url=url,headers=headers,verify=False)
@@ -281,9 +303,12 @@ def checkDomain(domain):
     zscaler = checkZscaler(domain)
     print("[+] {}: {}".format(domain, zscaler))
 
+    fortiguard = checkFortiguard(domain)
+    print("[+] {}: {}".format(domain, fortiguard))
+
     print("")
     
-    results = [domain,bluecoat,ibmxforce,ciscotalos,mxtoolbox]
+    results = [domain,bluecoat,ibmxforce,ciscotalos,mxtoolbox,zscaler,fortiguard]
     return results
 
 def solveCaptcha(url,session):  
@@ -456,7 +481,7 @@ If you plan to use this content for illegal purpose, don't.  Have a nice day :)'
                     doSleep(timing)
 
                 # Print results table
-                header = ['Domain', 'BlueCoat', 'IBM X-Force', 'Cisco Talos', 'MXToolbox']
+                header = ['Domain', 'BlueCoat', 'IBM X-Force', 'Cisco Talos', 'MXToolbox', 'Zscaler', 'Fortiguard']
                 print(drawTable(header,data))
 
         except KeyboardInterrupt:
