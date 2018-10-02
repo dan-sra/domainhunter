@@ -213,6 +213,44 @@ def checkMXToolbox(domain):
         print('[-] Error retrieving Google SafeBrowsing and PhishTank reputation!')
         return "-"
 
+
+def checkZscaler(domain):
+    try: 
+        url = 'https://tools.zscaler.com/category/?'
+        headers = {'User-Agent':useragent,
+                    'Origin':url,
+                    'Referer':url}
+
+        print('[*] Zscaler: {}'.format(domain))
+
+        response = s.post(url,headers=headers,verify=False, data={
+        		'tocheck': domain,
+        		'submit': 'send'
+        	})
+
+        soup = BeautifulSoup(response.content,'lxml')
+
+        urls = soup.findAll('div', class_='url')
+
+        type_map = {
+        	'general': 'General',
+        	'misc': "Misc unknown",
+        	'unliable': 'Legal Liability',
+        	'unknown': 'Unknown error',
+        	'unreachable': 'Unreachable',
+        	'security': 'Security Block'
+        }
+
+        category = urls[0].string.split(',')[1]
+        rank = type_map[urls[0]['class'][1]]
+
+        return "{} - {}".format(rank, category)
+
+    except:
+        print('[-] Error retrieving Zscaler reputation!')
+        return "-"
+
+
 def downloadMalwareDomains(malwaredomainsURL):
     url = malwaredomainsURL
     response = s.get(url=url,headers=headers,verify=False)
@@ -239,6 +277,9 @@ def checkDomain(domain):
 
     mxtoolbox = checkMXToolbox(domain)
     print("[+] {}: {}".format(domain, mxtoolbox))
+
+    zscaler = checkZscaler(domain)
+    print("[+] {}: {}".format(domain, zscaler))
 
     print("")
     
